@@ -63,7 +63,7 @@ def log():
     data = request.get_json()
     print data
 
-    return str(data)
+    return 'hiiiiii' + str(data)
 
 @application.route('/test')
 def test():
