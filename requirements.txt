@@ -17,7 +17,6 @@ docutils==0.14
 enum34==1.1.6
 Flask==1.0.2
 Flask-MySQLdb==0.2.0
-functools32==3.2.3.post2
 idna==2.6
 ipaddress==1.0.22
 itsdangerous==1.1.0
