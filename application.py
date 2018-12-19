@@ -1,6 +1,6 @@
 #!venv/bin/python
 import os
-from flask import Flask
+from flask import Flask, request
 from flask_mysqldb import MySQL
 
 # created following https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create-deploy-python-flask.html
@@ -55,13 +55,27 @@ mysql = MySQL(application)
 #application.add_url_rule('/<username>', 'hello', (lambda username:
 #    header_text + say_hello(username) + home_link + footer_text))
 
+@application.route('/log', methods=['POST'])
+def log():
+    data = request.get_data()
+    print data
+
+    data = request.get_json()
+    print data
+
+    return str(data)
+
 @application.route('/test')
-def users():
+def test():
     cur = mysql.connection.cursor()
     #cur.execute('''SELECT user, host FROM mysql.user''')
     cur.execute('''SELECT * from test''')
     rv = cur.fetchall()
     return str(rv)
+
+@application.route('/')
+def index():
+    return 'Hi'
 
 # run the app.
 if __name__ == "__main__":
