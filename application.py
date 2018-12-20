@@ -55,6 +55,18 @@ mysql = MySQL(application)
 #application.add_url_rule('/<username>', 'hello', (lambda username:
 #    header_text + say_hello(username) + home_link + footer_text))
 
+def insert_eeg(table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2):
+    print DB_URL
+
+    conn = mysql.connection
+    cur = conn.cursor()
+    query = '''INSERT INTO %s (subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2) VALUES (%d, %d, %f, %f, %f, %f, %f, %f)''' % (table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2)
+    print query
+    cur.execute(query) 
+    rv = cur.fetchall()
+    conn.commit()
+    return str(rv)
+
 @application.route('/log', methods=['POST'])
 def log():
     data = request.get_data()
@@ -63,7 +75,24 @@ def log():
     data = request.get_json()
     print data
 
-    return 'hiiiiii' + str(data)
+    table = data['table']
+    subject_id = int(data['subject_id'])
+    timestamp = int(data['timestamp'])
+
+    # do it manually to prevent SQL injections TODO sanitize properly
+    if table == 'raw' or table == 'alpha' or table == 'beta' or table == 'delta' or table == 'theta' or table == 'gamma' or table == 'good' or table == 'hsi':
+        eeg1 = float(data['eeg1'])
+        eeg2 = float(data['eeg2'])
+        eeg3 = float(data['eeg3'])
+        eeg4 = float(data['eeg4'])
+        aux1 = float(data['aux1'])
+        aux2 = float(data['aux2'])
+        rv = insert_eeg(table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2)
+    else:
+        rv = '--fuck--'
+    
+    return 'hiiiiii' + str(data) + '\n\n\n\n\n' + str(rv)
+
 
 @application.route('/test')
 def test():
