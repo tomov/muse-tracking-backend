@@ -56,16 +56,36 @@ mysql = MySQL(application)
 #    header_text + say_hello(username) + home_link + footer_text))
 
 def insert_eeg(table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2):
-    print DB_URL
-
     conn = mysql.connection
     cur = conn.cursor()
     query = '''INSERT INTO %s (subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2) VALUES (%d, %d, %f, %f, %f, %f, %f, %f)''' % (table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2)
+    cur.execute(query) 
+    rv = cur.fetchall()
+    conn.commit()
+    return str(rv)
+
+
+def insert_motion(table, subject_id, timestamp, x, y, z, fb, ud, lr):
+    conn = mysql.connection
+    cur = conn.cursor()
+    query = '''INSERT INTO %s (subject_id, timestamp, x, y, z, fb, ud, lr) VALUES (%d, %d, %f, %f, %f, %f, %f, %f)''' % (table, subject_id, timestamp, x, y, z, fb, ud, lr)
     print query
     cur.execute(query) 
     rv = cur.fetchall()
     conn.commit()
     return str(rv)
+
+
+def insert_artifact(table, subject_id, timestamp, headband, blink, jaw):
+    conn = mysql.connection
+    cur = conn.cursor()
+    query = '''INSERT INTO %s (subject_id, timestamp, headband, blink, jaw) VALUES (%d, %d, %f, %f, %f)''' % (table, subject_id, timestamp, headband, blink, jaw)
+    print query
+    cur.execute(query) 
+    rv = cur.fetchall()
+    conn.commit()
+    return str(rv)
+
 
 @application.route('/log', methods=['POST'])
 def log():
@@ -76,7 +96,7 @@ def log():
     print data
 
     table = data['table']
-    subject_id = int(data['subject_id'])
+    subject_id = int(data['subject_id']) # int to prevent SQL injections
     timestamp = int(data['timestamp'])
 
     # do it manually to prevent SQL injections TODO sanitize properly
@@ -88,10 +108,26 @@ def log():
         aux1 = float(data['aux1'])
         aux2 = float(data['aux2'])
         rv = insert_eeg(table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2)
+
+    elif table == 'accelerometer' or table == 'gyro':
+        x = float(data['x'])
+        y = float(data['y'])
+        z = float(data['z'])
+        fb = float(data['fb'])
+        ud = float(data['ud'])
+        lr = float(data['lr'])
+        insert_motion(table, subject_id, timestamp, x, y, z, fb, ud, lr)
+
+    elif table == 'artifact':
+        headband = float(data['headband'])
+        blink = float(data['blink'])
+        jaw = float(data['jaw'])
+        insert_artifact(table, subject_id, timestamp, headband, blink, jaw)
+
     else:
         rv = '--fuck--'
     
-    return 'hiiiiii' + str(data) + '\n\n\n\n\n' + str(rv)
+    return 'hiiiiii ' + str(data) + '\n\n\n\n\n' + str(rv)
 
 
 @application.route('/test')
