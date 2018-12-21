@@ -58,7 +58,7 @@ mysql = MySQL(application)
 def insert_eeg(table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2):
     conn = mysql.connection
     cur = conn.cursor()
-    query = '''INSERT INTO %s (subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2) VALUES (%d, %d, %f, %f, %f, %f, %f, %f)''' % (table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2)
+    query = '''INSERT INTO %s (subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2) VALUES (%d, from_unixtime(%d), %f, %f, %f, %f, %f, %f)''' % (table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2)
     cur.execute(query) 
     rv = cur.fetchall()
     conn.commit()
@@ -68,7 +68,7 @@ def insert_eeg(table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2)
 def insert_motion(table, subject_id, timestamp, x, y, z, fb, ud, lr):
     conn = mysql.connection
     cur = conn.cursor()
-    query = '''INSERT INTO %s (subject_id, timestamp, x, y, z, fb, ud, lr) VALUES (%d, %d, %f, %f, %f, %f, %f, %f)''' % (table, subject_id, timestamp, x, y, z, fb, ud, lr)
+    query = '''INSERT INTO %s (subject_id, timestamp, x, y, z, fb, ud, lr) VALUES (%d, from_unixtime(%d), %f, %f, %f, %f, %f, %f)''' % (table, subject_id, timestamp, x, y, z, fb, ud, lr)
     print query
     cur.execute(query) 
     rv = cur.fetchall()
@@ -79,7 +79,7 @@ def insert_motion(table, subject_id, timestamp, x, y, z, fb, ud, lr):
 def insert_artifact(table, subject_id, timestamp, headband, blink, jaw):
     conn = mysql.connection
     cur = conn.cursor()
-    query = '''INSERT INTO %s (subject_id, timestamp, headband, blink, jaw) VALUES (%d, %d, %f, %f, %f)''' % (table, subject_id, timestamp, headband, blink, jaw)
+    query = '''INSERT INTO %s (subject_id, timestamp, headband, blink, jaw) VALUES (%d, from_unixtime(%d), %f, %f, %f)''' % (table, subject_id, timestamp, headband, blink, jaw)
     print query
     cur.execute(query) 
     rv = cur.fetchall()
@@ -116,13 +116,13 @@ def log():
         fb = float(data['fb'])
         ud = float(data['ud'])
         lr = float(data['lr'])
-        insert_motion(table, subject_id, timestamp, x, y, z, fb, ud, lr)
+        rv = insert_motion(table, subject_id, timestamp, x, y, z, fb, ud, lr)
 
     elif table == 'artifact':
         headband = float(data['headband'])
         blink = float(data['blink'])
         jaw = float(data['jaw'])
-        insert_artifact(table, subject_id, timestamp, headband, blink, jaw)
+        rv = insert_artifact(table, subject_id, timestamp, headband, blink, jaw)
 
     else:
         rv = '--fuck--'
