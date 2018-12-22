@@ -55,37 +55,28 @@ mysql = MySQL(application)
 #application.add_url_rule('/<username>', 'hello', (lambda username:
 #    header_text + say_hello(username) + home_link + footer_text))
 
-def insert_eeg(table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2):
+def insert(query):
     conn = mysql.connection
     cur = conn.cursor()
-    query = '''INSERT INTO %s (subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2) VALUES (%d, from_unixtime(%d), %f, %f, %f, %f, %f, %f)''' % (table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2)
     cur.execute(query) 
     rv = cur.fetchall()
     conn.commit()
     return str(rv)
 
+def insert_eeg(table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2):
+    query = '''INSERT INTO %s (subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2) VALUES (%d, from_unixtime(%d), %f, %f, %f, %f, %f, %f)''' % (table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2)
+    rv = insert(query)
+    return rv
 
 def insert_motion(table, subject_id, timestamp, x, y, z, fb, ud, lr):
-    conn = mysql.connection
-    cur = conn.cursor()
     query = '''INSERT INTO %s (subject_id, timestamp, x, y, z, fb, ud, lr) VALUES (%d, from_unixtime(%d), %f, %f, %f, %f, %f, %f)''' % (table, subject_id, timestamp, x, y, z, fb, ud, lr)
-    print query
-    cur.execute(query) 
-    rv = cur.fetchall()
-    conn.commit()
-    return str(rv)
-
+    rv = insert(query)
+    return rv
 
 def insert_artifact(table, subject_id, timestamp, headband, blink, jaw):
-    conn = mysql.connection
-    cur = conn.cursor()
     query = '''INSERT INTO %s (subject_id, timestamp, headband, blink, jaw) VALUES (%d, from_unixtime(%d), %f, %f, %f)''' % (table, subject_id, timestamp, headband, blink, jaw)
-    print query
-    cur.execute(query) 
-    rv = cur.fetchall()
-    conn.commit()
-    return str(rv)
-
+    rv = insert(query)
+    return rv
 
 @application.route('/log', methods=['POST'])
 def log():
@@ -97,35 +88,51 @@ def log():
 
     table = data['table']
     subject_id = int(data['subject_id']) # int to prevent SQL injections
-    timestamp = int(data['timestamp'])
 
-    # do it manually to prevent SQL injections TODO sanitize properly
-    if table == 'raw' or table == 'alpha' or table == 'beta' or table == 'delta' or table == 'theta' or table == 'gamma' or table == 'good' or table == 'hsi':
-        eeg1 = float(data['eeg1'])
-        eeg2 = float(data['eeg2'])
-        eeg3 = float(data['eeg3'])
-        eeg4 = float(data['eeg4'])
-        aux1 = float(data['aux1'])
-        aux2 = float(data['aux2'])
-        rv = insert_eeg(table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2)
+    rows_str = ''
+    rv = ''
 
-    elif table == 'accelerometer' or table == 'gyro':
-        x = float(data['x'])
-        y = float(data['y'])
-        z = float(data['z'])
-        fb = float(data['fb'])
-        ud = float(data['ud'])
-        lr = float(data['lr'])
-        rv = insert_motion(table, subject_id, timestamp, x, y, z, fb, ud, lr)
+    for row in data['rows']:
 
-    elif table == 'artifact':
-        headband = float(data['headband'])
-        blink = float(data['blink'])
-        jaw = float(data['jaw'])
-        rv = insert_artifact(table, subject_id, timestamp, headband, blink, jaw)
+        timestamp = int(row['timestamp'])
 
-    else:
-        rv = '--fuck--'
+        # do it manually to prevent SQL injections TODO sanitize properly
+        if table == 'raw' or table == 'alpha' or table == 'beta' or table == 'delta' or table == 'theta' or table == 'gamma' or table == 'good' or table == 'hsi':
+            eeg1 = float(row['eeg1'])
+            eeg2 = float(row['eeg2'])
+            eeg3 = float(row['eeg3'])
+            eeg4 = float(row['eeg4'])
+            aux1 = float(row['aux1'])
+            aux2 = float(row['aux2'])
+            insert_str = '''INSERT INTO %s (subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2) VALUES ''' % (table)
+            rows_str = rows_str + ''', (%d, from_unixtime(%d), %f, %f, %f, %f, %f, %f)''' % (subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2)
+            #rv = insert_eeg(table, subject_id, timestamp, eeg1, eeg2, eeg3, eeg4, aux1, aux2)
+
+        elif table == 'accelerometer' or table == 'gyro':
+            x = float(row['x'])
+            y = float(row['y'])
+            z = float(row['z'])
+            fb = float(row['fb'])
+            ud = float(row['ud'])
+            lr = float(row['lr'])
+            insert_str = '''INSERT INTO %s (subject_id, timestamp, x, y, z, fb, ud, lr) VALUES ''' % (table)
+            rows_str = rows_str + ''', (%d, from_unixtime(%d), %f, %f, %f, %f, %f, %f)''' % (subject_id, timestamp, x, y, z, fb, ud, lr)
+            #rv = insert_motion(table, subject_id, timestamp, x, y, z, fb, ud, lr)
+
+        elif table == 'artifact':
+            headband = float(row['headband'])
+            blink = float(row['blink'])
+            jaw = float(row['jaw'])
+            insert_str = '''INSERT INTO %s (subject_id, timestamp, headband, blink, jaw) VALUES ''' % (table)
+            rows_str = rows_str + ''', (%d, from_unixtime(%d), %f, %f, %f)''' % (subject_id, timestamp, headband, blink, jaw)
+            #rv = insert_artifact(table, subject_id, timestamp, headband, blink, jaw)
+
+
+    if rows_str:
+        rows_str = rows_str[2:]
+        query = insert_str + rows_str
+        print query
+        rv = insert(query)
     
     return 'hiiiiii ' + str(data) + '\n\n\n\n\n' + str(rv)
 
