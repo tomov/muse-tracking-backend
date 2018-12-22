@@ -25,9 +25,9 @@ CREATE TABLE IF NOT EXISTS good (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_i
 CREATE TABLE IF NOT EXISTS hsi (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, eeg1 FLOAT, eeg2 FLOAT, eeg3 FLOAT, eeg4 FLOAT, aux1 FLOAT, aux2 FLOAT); -- IXNMuseDataPacketTypeHsiPrecision 
 
 -- http://ios.choosemuse.com/_i_x_n_accelerometer_8h.html
-CREATE TABLE IF NOT EXISTS accelerometer (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, x FLOAT, y FLOAT, z FLOAT, fb FLOAT, ud FLOAT, lr FLOAT); -- IXNMuseDataPacketTypeAccelerometer
+CREATE TABLE IF NOT EXISTS accelerometer (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, x FLOAT, y FLOAT, z FLOAT); -- IXNMuseDataPacketTypeAccelerometer
 -- http://ios.choosemuse.com/_i_x_n_gyro_8h.html
-CREATE TABLE IF NOT EXISTS gyro (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, x FLOAT, y FLOAT, z FLOAT, fb FLOAT, ud FLOAT, lr FLOAT); -- IXNMuseDataPacketTypeGyro
+CREATE TABLE IF NOT EXISTS gyro (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, x FLOAT, y FLOAT, z FLOAT); -- IXNMuseDataPacketTypeGyro
 
 -- http://ios.choosemuse.com/_i_x_n_muse_artifact_packet_8h_source.html
 CREATE TABLE IF NOT EXISTS artifact (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, headband BOOLEAN, blink BOOLEAN, jaw BOOLEAN); -- IXNMuseDataPacketTypeArtifacts
@@ -36,4 +36,4 @@ CREATE TABLE IF NOT EXISTS artifact (id BIGINT PRIMARY KEY AUTO_INCREMENT, subje
 CREATE TABLE IF NOT EXISTS location (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, latitude FLOAT, longitude FLOAT, altitude FLOAT); -- CLLocation
 
 -- https://developer.apple.com/documentation/coremotion/cmdevicemotion/1616149-useracceleration
-CREATE TABLE IF NOT EXISTS acceleration (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, x FLOAT, y FLOAT, z FLOAT, fb FLOAT, ud FLOAT, lr FLOAT); -- CMAcceleration
+CREATE TABLE IF NOT EXISTS acceleration (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, x FLOAT, y FLOAT, z FLOAT); -- CMAcceleration

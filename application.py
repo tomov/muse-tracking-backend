@@ -68,18 +68,13 @@ def insert_eeg(table, subject_id, timestamp, utimestamp, eeg1, eeg2, eeg3, eeg4,
     rv = insert(query)
     return rv
 
-def insert_motion(table, subject_id, timestamp, utimestamp, x, y, z, fb, ud, lr):
-    query = '''INSERT INTO %s (subject_id, timestamp, utimestamp, x, y, z, fb, ud, lr) VALUES (%d, from_unixtime(%d), %d, %f, %f, %f, %f, %f, %f)''' % (table, subject_id, timestamp, utimestamp, x, y, z, fb, ud, lr)
+def insert_motion(table, subject_id, timestamp, utimestamp, x, y, z):
+    query = '''INSERT INTO %s (subject_id, timestamp, utimestamp, x, y, z) VALUES (%d, from_unixtime(%d), %d, %f, %f, %f)''' % (table, subject_id, timestamp, utimestamp, x, y, z)
     rv = insert(query)
     return rv
 
 def insert_artifact(table, subject_id, timestamp, utimestamp, headband, blink, jaw):
     query = '''INSERT INTO %s (subject_id, timestamp, utimestamp, headband, blink, jaw) VALUES (%d, from_unixtime(%d), %d, %f, %f, %f)''' % (table, subject_id, timestamp, utimestamp, headband, blink, jaw)
-    rv = insert(query)
-    return rv
-
-def insert_acceleration(table, subject_id, timestamp, utimestamp, x, y, z):
-    query = '''INSERT INTO %s (subject_id, timestamp, utimestamp, x, y, z) VALUES (%d, from_unixtime(%d), %d, %f, %f, %f)''' % (table, subject_id, timestamp, utimestamp, x, y, z)
     rv = insert(query)
     return rv
 
@@ -124,12 +119,9 @@ def log():
             x = float(row['x'])
             y = float(row['y'])
             z = float(row['z'])
-            fb = float(row['fb'])
-            ud = float(row['ud'])
-            lr = float(row['lr'])
-            insert_str = '''INSERT INTO %s (subject_id, timestamp, utimestamp, x, y, z, fb, ud, lr) VALUES ''' % (table)
-            rows_str = rows_str + ''', (%d, from_unixtime(%d), %d, %f, %f, %f, %f, %f, %f)''' % (subject_id, timestamp, utimestamp, x, y, z, fb, ud, lr)
-            #rv = insert_motion(table, subject_id, timestamp, utimestamp, x, y, z, fb, ud, lr)
+            insert_str = '''INSERT INTO %s (subject_id, timestamp, utimestamp, x, y, z) VALUES ''' % (table)
+            rows_str = rows_str + ''', (%d, from_unixtime(%d), %d, %f, %f, %f)''' % (subject_id, timestamp, utimestamp, x, y, z)
+            #rv = insert_motion(table, subject_id, timestamp, utimestamp, x, y, z)
 
         elif table == 'artifact':
             headband = float(row['headband'])
