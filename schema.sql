@@ -31,3 +31,9 @@ CREATE TABLE IF NOT EXISTS gyro (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_i
 
 -- http://ios.choosemuse.com/_i_x_n_muse_artifact_packet_8h_source.html
 CREATE TABLE IF NOT EXISTS artifact (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, headband BOOLEAN, blink BOOLEAN, jaw BOOLEAN); -- IXNMuseDataPacketTypeArtifacts
+
+-- https://developer.apple.com/documentation/corelocation/cllocation
+CREATE TABLE IF NOT EXISTS location (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, latitude FLOAT, longitude FLOAT, altitude FLOAT); -- CLLocation
+
+-- https://developer.apple.com/documentation/coremotion/cmdevicemotion/1616149-useracceleration
+CREATE TABLE IF NOT EXISTS acceleration (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, x FLOAT, y FLOAT, z FLOAT, fb FLOAT, ud FLOAT, lr FLOAT); -- CMAcceleration

@@ -78,6 +78,17 @@ def insert_artifact(table, subject_id, timestamp, utimestamp, headband, blink, j
     rv = insert(query)
     return rv
 
+def insert_acceleration(table, subject_id, timestamp, utimestamp, x, y, z):
+    query = '''INSERT INTO %s (subject_id, timestamp, utimestamp, x, y, z) VALUES (%d, from_unixtime(%d), %d, %f, %f, %f)''' % (table, subject_id, timestamp, utimestamp, x, y, z)
+    rv = insert(query)
+    return rv
+
+def insert_location(table, subject_id, timestamp, utimestamp, latitude, longitude, altitude):
+    query = '''INSERT INTO %s (subject_id, timestamp, utimestamp, latitude, longitude, altitude) VALUES (%d, from_unixtime(%d), %d, %f, %f, %f)''' % (table, subject_id, timestamp, utimestamp, latitude, longitude, altitude)
+    rv = insert(query)
+    return rv
+
+
 @application.route('/log', methods=['POST'])
 def log():
     data = request.get_data()
@@ -128,6 +139,20 @@ def log():
             rows_str = rows_str + ''', (%d, from_unixtime(%d), %d, %f, %f, %f)''' % (subject_id, timestamp, utimestamp, headband, blink, jaw)
             #rv = insert_artifact(table, subject_id, timestamp, utimestamp, headband, blink, jaw)
 
+        elif table == 'acceleration':
+            x = float(row['x'])
+            y = float(row['y'])
+            z = float(row['z'])
+            insert_str = '''INSERT INTO %s (subject_id, timestamp, utimestamp, x, y, z) VALUES ''' % (table)
+            rows_str = rows_str + ''', (%d, from_unixtime(%d), %d, %f, %f, %f)''' % (subject_id, timestamp, utimestamp, x, y, z)
+
+        elif table == 'location':
+            latitude = float(row['latitude'])
+            longitude = float(row['longitude'])
+            altitude = float(row['altitude'])
+            insert_str = '''INSERT INTO %s (subject_id, timestamp, utimestamp, latitude, longitude, altitude) VALUES ''' % (table)
+            rows_str = rows_str + ''', (%d, from_unixtime(%d), %d, %f, %f, %f)''' % (subject_id, timestamp, utimestamp, latitude, longitude, altitude)
+
 
     if rows_str:
         rows_str = rows_str[2:]
@@ -138,6 +163,7 @@ def log():
     # return 'hiiiiii ' + str(data) + '\n\n\n\n\n' + str(rv)
     return 'OK'
 
+# TODO use TCP sockets --> https://realpython.com/python-sockets/#echo-server
 
 @application.route('/test')
 def test():
