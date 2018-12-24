@@ -2,6 +2,7 @@
 import os
 from flask import Flask, request
 from flask_mysqldb import MySQL
+import scipy.stats
 
 # created following https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create-deploy-python-flask.html
 #
@@ -248,13 +249,12 @@ def extract_for_comparison(s1, t1, w1, lag, s2, t2, w2, s3, t3, w3):
         s1_win -= s1[l1]
         l1 += 1
 
-
     return ret1, ret2, ret3
 
 
 @application.route('/query_test')
 def query_test():
-    rv = select('''SELECT eeg1, utimestamp / 1000 FROM theta LIMIT 10000''')
+    rv = select('''SELECT eeg1, utimestamp / 1000 FROM theta LIMIT 1000''')
     s1 = []
     t1 = []
     for row in rv:
@@ -263,7 +263,7 @@ def query_test():
     #w1 = 250
     w1 = 500
 
-    rv = select('''SELECT SQRT(POW(x, 2) + POW(y, 2) + POW(z, 2)), utimestamp / 1000  FROM accelerometer LIMIT 10000''')
+    rv = select('''SELECT SQRT(POW(x, 2) + POW(y, 2) + POW(z, 2)), utimestamp / 1000  FROM accelerometer LIMIT 1000''')
     s2 = []
     t2 = []
     for row in rv:
@@ -272,7 +272,7 @@ def query_test():
     #w2 = 250
     w2 = 500
 
-    rv = select('''SELECT eeg1, utimestamp / 1000 FROM hsi LIMIT 10000''')
+    rv = select('''SELECT eeg1, utimestamp / 1000 FROM hsi LIMIT 1000''')
     s3 = []
     t3 = []
     for row in rv:
@@ -282,7 +282,11 @@ def query_test():
 
     lag = 0
     ret1, ret2, ret3 = extract_for_comparison(s1, t1, w1, lag, s2, t2, w2, s3, t3, w3)
-    return str(len(ret1))
+
+    r, p = scipy.stats.pearsonr(ret1, ret2)
+    print r, ' ', p
+
+    return str(r) + ', ' + str(p)
 
 
 @application.route('/viz')
