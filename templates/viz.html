@@ -17,12 +17,12 @@
                         <select id="queries" name="queries">
                             <option value="0" selected="selected">(New query)</option>
                             {% for query in queries %}
-                            <option value="{{ queries[0] }}">{{ queries[1] }}</option>
+                            <option value="{{ query[0] }}">{{ query[1] }}</option>
                             {% endfor %}
                         </select>
 
                         <br /><br /><strong>Neural:</strong><br />
-                        <input type="text" name="sig_neural" id="sig_neural" value="eeg1" size="50"></input>
+                        <input type="text" name="sig_neural" id="sig_neural" value="" size="50"></input>
                         <select id="tab_neural" name="tab_neural">
                             <option value="alpha">alpha</option>
                             <option value="beta">beta</option>
@@ -32,16 +32,16 @@
                         </select>
                         <br />
                         window: 
-                        <input type="text" name="win_neural" id="win_neural" value="500"></input>
+                        <input type="text" name="win_neural" id="win_neural" value=""></input>
                         ms
 
                         <br /><br />
                         lag: 
-                        <input type="text" name="lag" id="lag" value="0"></input>
+                        <input type="text" name="lag" id="lag" value=""></input>
                         ms
 
                         <br /><br /><strong>Behavioral:</strong><br />
-                        <input type="text" name="sig_behavioral" id="sig_behavioral" value="SQRT(POW(x, 2) + POW(y, 2) + POW(z, 2))" size="50"></input>
+                        <input type="text" name="sig_behavioral" id="sig_behavioral" value="" size="50"></input>
                         <select id="tab_behavioral" name="tab_behavioral">
                             <option value="accelerometer" selected="selected">accelerometer</option>
                             <option value="gyro">gyro</option>
@@ -54,14 +54,14 @@
                         ms
 
                         <br /><br /><strong>Quality filter:</strong><br />
-                        <input type="text" name="sig_quality" id="sig_quality" value="eeg1" size="50"></input>
+                        <input type="text" name="sig_quality" id="sig_quality" value="" size="50"></input>
                         <select id="tab_quality" name="tab_quality">
                             <option value="hsi" selected="selected">hsi</option>
                             <option value="good" >good</option>
                         </select>
                         <br />
                         window margin around neural window: 
-                        <input type="text" name="win_quality" id="win_quality" value="500"></input>
+                        <input type="text" name="win_quality" id="win_quality" value=""></input>
                         ms
 
                         <br /><br />
@@ -99,7 +99,6 @@
                         });
 
                         // handle submit for save query
-                        // from https://stackoverflow.com/questions/1200266/submit-a-form-using-jquery
                         $('input#save_query').click( function() {
                             $.post("{{ url_for('save_query') }}", $('form#correlate').serialize(), function(data) {
                                 console.log(data);
@@ -107,6 +106,26 @@
                                 },
                                 'json' // I expect a JSON response
                             );
+                        });
+
+                        // handle load query
+                        $('select#queries').change( function() {
+
+                            if ($('#queries').val() != '0') {
+                                $.get("{{ url_for('load_query') }}", { id: $('#queries').val() }, function(data) {
+                                    console.log(data);
+                                    for (var name in data) {
+                                        if (name != 'queries') {
+                                            $('#' + name).val(data[name]);
+                                        }
+                                    }
+                                    },
+                                    'json' // I expect a JSON response
+                                );
+                            } else {
+                                // new query -> clear form
+                                $('form#correlate').trigger('reset');
+                            }
                         });
                     </script>
 

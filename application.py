@@ -308,6 +308,16 @@ def correlate():
     return jsonify(ret)
 
 
+@application.route('/load_query', methods=['GET'])
+def load_query():
+    query_id = request.args.get('id')
+    query = select('''SELECT form, title, description FROM queries WHERE id = %d''' % int(query_id))
+    form = json.loads(query[0][0])
+
+    print form
+    
+    return jsonify(form)
+
 
 
 @application.route('/save_query', methods=['POST'])
@@ -327,6 +337,7 @@ def save_query():
 def viz(subject_id):
 
     queries = select('''SELECT id, title FROM queries''')
+    print queries
 
     #loc = select('''SELECT latitude, longitude FROM location LIMIT 1000''')
     loc = [[0, 0]]
