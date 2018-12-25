@@ -1,0 +1,25 @@
+#wrapper {
+  display: table;
+  width: 100%;
+  height: 100%;
+}
+#row {
+  display: table-row;
+  height: 70%;
+}
+#query {
+  display: table-cell;
+  background-color: red;
+  width: 40%;
+}
+#map {
+  display: table-cell;
+  background-color: blue;
+  width: 60%;
+  height: 100%;
+}
+#third {
+  display: table-cell;
+  background-color: #bada55;
+  width: 200px;
+}

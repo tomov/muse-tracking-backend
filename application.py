@@ -1,6 +1,6 @@
 #!venv/bin/python
 import os
-from flask import Flask, request
+from flask import Flask, request, render_template
 from flask_mysqldb import MySQL
 import scipy.stats
 
@@ -289,9 +289,9 @@ def query_test():
     return str(r) + ', ' + str(p)
 
 
-@application.route('/viz')
-def viz():
-    return ''
+@application.route('/viz/<subject_id>')
+def viz(subject_id):
+    return render_template('viz.html', title='Visualize', subject_id=subject_id)
 
 
 # TODO use TCP sockets --> https://realpython.com/python-sockets/#echo-server
