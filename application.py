@@ -291,9 +291,13 @@ def query_test():
     return str(r) + ', ' + str(p)
 
 
+
+
 @application.route('/viz/<subject_id>')
 def viz(subject_id):
-    return render_template('viz.html', title='Visualize', maps_api_key=MAPS_API_KEY)
+    #loc = select('''SELECT latitude, longitude FROM location LIMIT 1000''')
+    loc = [[0, 0]]
+    return render_template('viz.html', title='Visualize', maps_api_key=MAPS_API_KEY, loc=loc, subject_id=subject_id)
 
 
 # TODO use TCP sockets --> https://realpython.com/python-sockets/#echo-server

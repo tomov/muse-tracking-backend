@@ -1,14 +1,66 @@
 <html>
     <head>
-        <title>{{ title }} - Microblog</title>
+        <title>Muse EEG Live</title>
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/viz.css') }}">
         <script src="{{ url_for('static', filename='js/jquery-1.10.2.min.js') }}"></script>
     </head>
 
     <body>
+        <h2>Subject #{{ subject_id }} real-time and historical Muse EEG data</h2>
+
         <div id="wrapper">
             <div id="row">
-                <div id="query">query</div>
+                <div id="query">
+
+                    <form id="correlate">
+                        <h3>Neural:</h3>
+                        <input type="text" name="sig_neural" id="sig_neural" value="eeg1" size="50"></input>
+                        <select id="tab_neural">
+                            <option value="alpha">alpha</option>
+                            <option value="beta">beta</option>
+                            <option value="delta">delta</option>
+                            <option value="theta" selected="selected">theta</option>
+                            <option value="gamma">gamma</option>
+                        </select>
+                        <br />
+                        window: 
+                        <input type="text" name="win_neural" id="win_neural" value="500"></input>
+                        ms
+
+                        <br /><br />
+                        lag: 
+                        <input type="text" name="lag" id="lag" value="0"></input>
+                        ms
+                        <br />
+
+                        <h3>Behavioral:</h3>
+                        <input type="text" name="sig_behavioral" id="sig_behavioral" value="SQRT(POW(x, 2) + POW(y, 2) + POW(z, 2))" size="50"></input>
+                        <select id="tab_behavioral">
+                            <option value="accelerometer" selected="selected">accelerometer</option>
+                            <option value="gyro">gyro</option>
+                            <option value="location">location</option>
+                            <option value="acceleration">acceleration</option>
+                        </select>
+                        <br />
+                        window: 
+                        <input type="text" name="win_behavioral" id="win_behavioral" value="500"></input>
+                        ms
+
+                        <h3>Quality filter:</h3>
+                        <input type="text" name="sig_quality" id="sig_quality" value="eeg1" size="50"></input>
+                        <select id="tab_quality">
+                            <option value="hsi" selected="selected">hsi</option>
+                            <option value="good" >good</option>
+                        </select>
+                        <br />
+                        window margin around neural window: 
+                        <input type="text" name="win_quality" id="win_quality" value="500"></input>
+                        ms
+                    </form>
+
+                </div>
+
+
                 <div id="map">map<br><br></div>
             </div>
         </div>
@@ -16,33 +68,48 @@
 
 		<script>
 
-		  // This example creates a 2-pixel-wide red polyline showing the path of
-		  // the first trans-Pacific flight between Oakland, CA, and Brisbane,
-		  // Australia which was made by Charles Kingsford Smith.
+		    // from https://developers.google.com/maps/documentation/javascript/examples/polyline-simple
+		    // This example creates a 2-pixel-wide red polyline showing the path of
+		    // the first trans-Pacific flight between Oakland, CA, and Brisbane,
+		    // Australia which was made by Charles Kingsford Smith.
 
-		  function initMap() {
-			var map = new google.maps.Map(document.getElementById('map'), {
-			  zoom: 3,
-			  center: {lat: 0, lng: -180},
-			  mapTypeId: 'terrain'
-			});
+            function initMap() {
+                // convert from python to javascript array
+                //
+                var loc = {{ loc|tojson }};
+                var coords = [];
+                bounds  = new google.maps.LatLngBounds(); // to auto zoom / pan map
+                for (var i = 0; i < loc.length; i++) {
+                    coords.push({lat: loc[i][0], lng: loc[i][1]})
+                    bounds.extend(new google.maps.LatLng(loc[i][0], loc[i][1]));
+                }
 
-			var flightPlanCoordinates = [
-			  {lat: 37.772, lng: -122.214},
-			  {lat: 21.291, lng: -157.821},
-			  {lat: -18.142, lng: 178.431},
-			  {lat: -27.467, lng: 153.027}
-			];
-			var flightPath = new google.maps.Polyline({
-			  path: flightPlanCoordinates,
-			  geodesic: true,
-			  strokeColor: '#FF0000',
-			  strokeOpacity: 1.0,
-			  strokeWeight: 2
-			});
-
-			flightPath.setMap(map);
-		  }
+                var map = new google.maps.Map(document.getElementById('map'), {
+                  zoom: 3,
+                  center: {lat: 0, lng: -180},
+                  mapTypeId: 'terrain'
+                });
+                map.fitBounds(bounds);
+                map.panToBounds(bounds);
+               
+                /*
+                var flightPlanCoordinates = [
+                  {lat: 37.772, lng: -122.214},
+                  {lat: 21.291, lng: -157.821},
+                  {lat: -18.142, lng: 178.431},
+                  {lat: -27.467, lng: 153.027}
+                ];
+                */
+                var path = new google.maps.Polyline({
+                  path: coords,
+                  geodesic: true,
+                  strokeColor: '#FF0000',
+                  strokeOpacity: 1.0,
+                  strokeWeight: 2
+                });
+                
+                path.setMap(map);
+            }
 		</script>
 
 
