@@ -3,6 +3,7 @@
         <title>Muse EEG Live</title>
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/viz.css') }}">
         <script src="{{ url_for('static', filename='js/jquery-1.10.2.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/plotly-latest.min.js') }}"></script>
     </head>
 
     <body>
@@ -70,6 +71,8 @@
                         <br /><br /><strong>Result:</strong><br />
                         <span id="corr_result"></span> <!-- TODO remove out of form... maybe split into two forms? but then can't save query ... -->
 
+                        <div id="scatter_plot"></div>
+
 
                         <br /><br /><br />
                         Query title
@@ -88,6 +91,7 @@
                     <script>
                         // handle submit for correlate form (Run button)
                         // from https://stackoverflow.com/questions/1200266/submit-a-form-using-jquery
+                        //
                         $('input#submit_corr').click( function() {
                             $.post("{{ url_for('correlate') }}", $('form#correlate').serialize(), function() {}, 'json')
                             .done(function(data) {
@@ -95,6 +99,9 @@
                                 var r = data['r'];
                                 var p = data['p'];
                                 $('#corr_result').html("r = " + r.toString() + ", p = " + p.toString());
+                                var neural = data['ret1']
+                                var behavioral = data['ret2']
+                                scatterPlot(neural, behavioral);
                             })
                             .fail(function(xhr, status, error) {
                                 $('#corr_result').html("ERROR");
@@ -105,6 +112,7 @@
                         });
 
                         // handle submit for save query
+                        //
                         $('input#save_query').click( function() {
 
                             $.post("{{ url_for('save_query') }}", $('form#correlate').serialize(), function() {}, 'json')
@@ -118,6 +126,7 @@
                         });
 
                         // handle load query
+                        //
                         $('select#queries').change( function() {
 
                             if ($('#queries').val() != '0') {
@@ -136,6 +145,7 @@
                                 $('form#correlate').trigger('reset');
                             }
                         });
+
                     </script>
 
 
@@ -149,6 +159,40 @@
 
 
 		<script>
+           
+            // scatter plot for query results
+            // from https://plot.ly/javascript/getting-started/#hello-world-example
+            // and https://plot.ly/javascript/line-charts/
+            //
+            function scatterPlot(neural, behavioral) {
+                var trace1 = {
+                      x: neural,
+                      y: behavioral,
+                      mode: 'markers'
+                };
+                var data = [ trace1 ];
+
+                var layout = {
+                    title: 'Neural vs. Behavioral',
+                    xaxis: {
+                        title: 'Neural'
+                    },
+                    yaxis: {
+                        title: 'Behavioral'
+                    }
+                };
+
+                Plotly.newPlot('scatter_plot', data, layout);
+
+                /*
+                TESTER = document.getElementById('scatter_plot');
+                Plotly.plot( TESTER, [{
+                x: [1, 2, 3, 4, 5],
+                y: [1, 2, 4, 8, 16] }], {
+                margin: { t: 0 } } );
+                */
+            }
+
             // draw map
 		    // from https://developers.google.com/maps/documentation/javascript/examples/polyline-simple
 

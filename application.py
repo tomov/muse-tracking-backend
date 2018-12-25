@@ -307,7 +307,7 @@ def correlate():
     r, p = scipy.stats.pearsonr(ret1, ret2)
     print r, ' ', p
 
-    ret = {'r': r, 'p': p, 'q1': q1, 'q2': q2, 'q3': q3}
+    ret = {'r': r, 'p': p, 'q1': q1, 'q2': q2, 'q3': q3, 'ret1': ret1, 'ret2': ret2}
     return jsonify(ret)
 
 

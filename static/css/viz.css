@@ -18,6 +18,11 @@
   width: 60%;
   height: 100%;
 }
+#scatter_plot {
+    width: 400px;
+    height: 400px;
+    /* background-color: blue; */
+}
 #third {
   display: table-cell;
   background-color: #bada55;
