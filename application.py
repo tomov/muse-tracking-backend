@@ -274,7 +274,8 @@ def correlate():
     tab_quality = request.form['tab_quality']
     win_quality = int(request.form['win_quality'])
 
-    rv = select('''SELECT %s, utimestamp / 1000 FROM %s ORDER BY utimestamp LIMIT 1000''' % (sig_neural, tab_neural))
+    q1 = '''SELECT %s, utimestamp / 1000 FROM %s ORDER BY utimestamp LIMIT 1000''' % (sig_neural, tab_neural)
+    rv = select(q1)
     s1 = []
     t1 = []
     for row in rv:
@@ -282,7 +283,8 @@ def correlate():
         t1.append(row[1])
     w1 = win_neural
 
-    rv = select('''SELECT %s, utimestamp / 1000  FROM %s ORDER BY utimestamp LIMIT 1000''' % (sig_behavioral, tab_behavioral))
+    q2 = '''SELECT %s, utimestamp / 1000  FROM %s ORDER BY utimestamp LIMIT 1000''' % (sig_behavioral, tab_behavioral)
+    rv = select(q2)
     s2 = []
     t2 = []
     for row in rv:
@@ -290,7 +292,8 @@ def correlate():
         t2.append(row[1])
     w2 = win_behavioral 
 
-    rv = select('''SELECT %s, utimestamp / 1000 FROM %s ORDER BY utimestamp LIMIT 1000''' % (sig_quality, tab_quality))
+    q3 = '''SELECT %s, utimestamp / 1000 FROM %s ORDER BY utimestamp LIMIT 1000''' % (sig_quality, tab_quality)
+    rv = select(q3)
     s3 = []
     t3 = []
     for row in rv:
@@ -304,7 +307,7 @@ def correlate():
     r, p = scipy.stats.pearsonr(ret1, ret2)
     print r, ' ', p
 
-    ret = {'r': r, 'p': p}
+    ret = {'r': r, 'p': p, 'q1': q1, 'q2': q2, 'q3': q3}
     return jsonify(ret)
 
 
@@ -315,7 +318,6 @@ def load_query():
     form = json.loads(query[0][0])
 
     print form
-    
     return jsonify(form)
 
 
@@ -330,7 +332,7 @@ def save_query():
 
     query = '''INSERT INTO queries (form, title, description) VALUES ("%s", "%s", "%s")''' % (form, title, description)
     rv = insert(query)
-    return str(rv)
+    return jsonify(rv) 
 
 
 @application.route('/viz/<subject_id>')

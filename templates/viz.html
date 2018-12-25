@@ -67,10 +67,11 @@
                         <br /><br />
                         <input type="button" name="submit_corr" id="submit_corr" value="Run"></input>
 
+                        <br /><br /><strong>Result:</strong><br />
                         <span id="corr_result"></span> <!-- TODO remove out of form... maybe split into two forms? but then can't save query ... -->
 
 
-                        <br /><br />
+                        <br /><br /><br />
                         Query title
                         <input type="text" name="query_title" id="query_title" value=""></input>
                         <br />
@@ -79,6 +80,7 @@
                         <br />
                         <input type="button" name="save_query" id="save_query" value="Save query"></input>
                         
+                        <br />
                         <span id="save_result"></span>
                     </form>
 
@@ -87,25 +89,32 @@
                         // handle submit for correlate form (Run button)
                         // from https://stackoverflow.com/questions/1200266/submit-a-form-using-jquery
                         $('input#submit_corr').click( function() {
-                            $.post("{{ url_for('correlate') }}", $('form#correlate').serialize(), function(data) {
+                            $.post("{{ url_for('correlate') }}", $('form#correlate').serialize(), function() {}, 'json')
+                            .done(function(data) {
                                 console.log(data);
                                 var r = data['r'];
                                 var p = data['p'];
                                 $('#corr_result').html("r = " + r.toString() + ", p = " + p.toString());
+                            })
+                            .fail(function(xhr, status, error) {
+                                $('#corr_result').html("ERROR");
+                            })
+                            .always(function() {
                                 $('#save_result').html("");
-                                },
-                                'json' // I expect a JSON response
-                            );
+                            });
                         });
 
                         // handle submit for save query
                         $('input#save_query').click( function() {
-                            $.post("{{ url_for('save_query') }}", $('form#correlate').serialize(), function(data) {
+
+                            $.post("{{ url_for('save_query') }}", $('form#correlate').serialize(), function() {}, 'json')
+                            .done(function(data) {
                                 console.log(data);
                                 $('#save_result').html("Saved!");
-                                },
-                                'json' // I expect a JSON response
-                            );
+                            })
+                            .fail(function(xhr, status, error) {
+                                $('#save_result').html("ERROR!");
+                            })
                         });
 
                         // handle load query
