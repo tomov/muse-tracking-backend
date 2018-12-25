@@ -44,6 +44,8 @@ application.config['MYSQL_PASSWORD'] = DB_PASS
 application.config['MYSQL_PORT'] = int(DB_PORT)
 application.config['MYSQL_DB'] = 'muse' 
 
+MAPS_API_KEY = os.environ['MAPS_API_KEY']
+
 # mysql connector
 mysql = MySQL(application)
 
@@ -291,7 +293,7 @@ def query_test():
 
 @application.route('/viz/<subject_id>')
 def viz(subject_id):
-    return render_template('viz.html', title='Visualize', subject_id=subject_id)
+    return render_template('viz.html', title='Visualize', maps_api_key=MAPS_API_KEY)
 
 
 # TODO use TCP sockets --> https://realpython.com/python-sockets/#echo-server
