@@ -1,7 +1,8 @@
 #!venv/bin/python
 import os
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 from flask_mysqldb import MySQL
+import json
 import scipy.stats
 
 # created following https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create-deploy-python-flask.html
@@ -93,7 +94,9 @@ def insert_location(table, subject_id, timestamp, utimestamp, latitude, longitud
     rv = insert(query)
     return rv
 
-
+# post data to the database
+# called by the Muse iOS app
+#
 @application.route('/log', methods=['POST'])
 def log():
     data = request.get_data()
@@ -254,61 +257,84 @@ def extract_for_comparison(s1, t1, w1, lag, s2, t2, w2, s3, t3, w3):
     return ret1, ret2, ret3
 
 
-@application.route('/query_test')
-def query_test():
-    rv = select('''SELECT eeg1, utimestamp / 1000 FROM theta LIMIT 1000''')
+# correlate neural and behavioral signals as specified by user
+#
+@application.route('/correlate', methods=['POST'])
+def correlate():
+
+    # TODO sanitize!!!!
+    sig_neural = request.form['sig_neural']
+    tab_neural = request.form['tab_neural']
+    win_neural = int(request.form['win_neural'])
+    lag = int(request.form['lag'])
+    sig_behavioral = request.form['sig_behavioral']
+    tab_behavioral = request.form['tab_behavioral']
+    win_behavioral = int(request.form['win_behavioral'])
+    sig_quality = request.form['sig_quality']
+    tab_quality = request.form['tab_quality']
+    win_quality = int(request.form['win_quality'])
+
+    rv = select('''SELECT %s, utimestamp / 1000 FROM %s ORDER BY utimestamp LIMIT 1000''' % (sig_neural, tab_neural))
     s1 = []
     t1 = []
     for row in rv:
         s1.append(row[0])
         t1.append(row[1])
-    #w1 = 250
-    w1 = 500
+    w1 = win_neural
 
-    rv = select('''SELECT SQRT(POW(x, 2) + POW(y, 2) + POW(z, 2)), utimestamp / 1000  FROM accelerometer LIMIT 1000''')
+    rv = select('''SELECT %s, utimestamp / 1000  FROM %s ORDER BY utimestamp LIMIT 1000''' % (sig_behavioral, tab_behavioral))
     s2 = []
     t2 = []
     for row in rv:
         s2.append(row[0])
         t2.append(row[1])
-    #w2 = 250
-    w2 = 500
+    w2 = win_behavioral 
 
-    rv = select('''SELECT eeg1, utimestamp / 1000 FROM hsi LIMIT 1000''')
+    rv = select('''SELECT %s, utimestamp / 1000 FROM %s ORDER BY utimestamp LIMIT 1000''' % (sig_quality, tab_quality))
     s3 = []
     t3 = []
     for row in rv:
         s3.append(row[0])
         t3.append(row[1])
-    w3 = 500
+    w3 = win_quality
 
-    lag = 0
+    lag = lag
     ret1, ret2, ret3 = extract_for_comparison(s1, t1, w1, lag, s2, t2, w2, s3, t3, w3)
 
     r, p = scipy.stats.pearsonr(ret1, ret2)
     print r, ' ', p
 
-    return str(r) + ', ' + str(p)
+    ret = {'r': r, 'p': p}
+    return jsonify(ret)
 
 
+
+
+@application.route('/save_query', methods=['POST'])
+def save_query():
+
+    # TODO sanitize!!!!
+    form = mysql.connection.escape_string(json.dumps(request.form))
+    title = mysql.connection.escape_string(request.form['query_title'])
+    description = mysql.connection.escape_string(request.form['query_desc'])
+
+    query = '''INSERT INTO queries (form, title, description) VALUES ("%s", "%s", "%s")''' % (form, title, description)
+    rv = insert(query)
+    return str(rv)
 
 
 @application.route('/viz/<subject_id>')
 def viz(subject_id):
+
+    queries = select('''SELECT id, title FROM queries''')
+
     #loc = select('''SELECT latitude, longitude FROM location LIMIT 1000''')
     loc = [[0, 0]]
-    return render_template('viz.html', title='Visualize', maps_api_key=MAPS_API_KEY, loc=loc, subject_id=subject_id)
+    return render_template('viz.html', title='Visualize', maps_api_key=MAPS_API_KEY, loc=loc, subject_id=subject_id, queries=queries)
 
 
 # TODO use TCP sockets --> https://realpython.com/python-sockets/#echo-server
 
-@application.route('/test')
-def test():
-    cur = mysql.connection.cursor()
-    #cur.execute('''SELECT user, host FROM mysql.user''')
-    cur.execute('''SELECT * from test''')
-    rv = cur.fetchall()
-    return str(rv)
 
 @application.route('/')
 def index():

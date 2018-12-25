@@ -37,3 +37,5 @@ CREATE TABLE IF NOT EXISTS location (id BIGINT PRIMARY KEY AUTO_INCREMENT, subje
 
 -- https://developer.apple.com/documentation/coremotion/cmdevicemotion/1616149-useracceleration
 CREATE TABLE IF NOT EXISTS acceleration (id BIGINT PRIMARY KEY AUTO_INCREMENT, subject_id INT, timestamp TIMESTAMP, utimestamp BIGINT, x FLOAT, y FLOAT, z FLOAT); -- CMAcceleration
+
+CREATE TABLE IF NOT EXISTS queries (id BIGINT PRIMARY KEY AUTO_INCREMENT, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, form TEXT, title TINYTEXT, description TEXT)

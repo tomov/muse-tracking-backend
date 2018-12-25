@@ -13,9 +13,17 @@
                 <div id="query">
 
                     <form id="correlate">
-                        <h3>Neural:</h3>
+                        Load saved query: <br />
+                        <select id="queries" name="queries">
+                            <option value="0" selected="selected">(New query)</option>
+                            {% for query in queries %}
+                            <option value="{{ queries[0] }}">{{ queries[1] }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <br /><br /><strong>Neural:</strong><br />
                         <input type="text" name="sig_neural" id="sig_neural" value="eeg1" size="50"></input>
-                        <select id="tab_neural">
+                        <select id="tab_neural" name="tab_neural">
                             <option value="alpha">alpha</option>
                             <option value="beta">beta</option>
                             <option value="delta">delta</option>
@@ -31,11 +39,10 @@
                         lag: 
                         <input type="text" name="lag" id="lag" value="0"></input>
                         ms
-                        <br />
 
-                        <h3>Behavioral:</h3>
+                        <br /><br /><strong>Behavioral:</strong><br />
                         <input type="text" name="sig_behavioral" id="sig_behavioral" value="SQRT(POW(x, 2) + POW(y, 2) + POW(z, 2))" size="50"></input>
-                        <select id="tab_behavioral">
+                        <select id="tab_behavioral" name="tab_behavioral">
                             <option value="accelerometer" selected="selected">accelerometer</option>
                             <option value="gyro">gyro</option>
                             <option value="location">location</option>
@@ -46,9 +53,9 @@
                         <input type="text" name="win_behavioral" id="win_behavioral" value="500"></input>
                         ms
 
-                        <h3>Quality filter:</h3>
+                        <br /><br /><strong>Quality filter:</strong><br />
                         <input type="text" name="sig_quality" id="sig_quality" value="eeg1" size="50"></input>
-                        <select id="tab_quality">
+                        <select id="tab_quality" name="tab_quality">
                             <option value="hsi" selected="selected">hsi</option>
                             <option value="good" >good</option>
                         </select>
@@ -56,7 +63,54 @@
                         window margin around neural window: 
                         <input type="text" name="win_quality" id="win_quality" value="500"></input>
                         ms
+
+                        <br /><br />
+                        <input type="button" name="submit_corr" id="submit_corr" value="Run"></input>
+
+                        <span id="corr_result"></span> <!-- TODO remove out of form... maybe split into two forms? but then can't save query ... -->
+
+
+                        <br /><br />
+                        Query title
+                        <input type="text" name="query_title" id="query_title" value=""></input>
+                        <br />
+                        Description<br />
+                        <textarea rows="4" cols="50" name="query_desc" id="query_desc"> </textarea>
+                        <br />
+                        <input type="button" name="save_query" id="save_query" value="Save query"></input>
+                        
+                        <span id="save_result"></span>
                     </form>
+
+
+                    <script>
+                        // handle submit for correlate form (Run button)
+                        // from https://stackoverflow.com/questions/1200266/submit-a-form-using-jquery
+                        $('input#submit_corr').click( function() {
+                            $.post("{{ url_for('correlate') }}", $('form#correlate').serialize(), function(data) {
+                                console.log(data);
+                                var r = data['r'];
+                                var p = data['p'];
+                                $('#corr_result').html("r = " + r.toString() + ", p = " + p.toString());
+                                $('#save_result').html("");
+                                },
+                                'json' // I expect a JSON response
+                            );
+                        });
+
+                        // handle submit for save query
+                        // from https://stackoverflow.com/questions/1200266/submit-a-form-using-jquery
+                        $('input#save_query').click( function() {
+                            $.post("{{ url_for('save_query') }}", $('form#correlate').serialize(), function(data) {
+                                console.log(data);
+                                $('#save_result').html("Saved!");
+                                },
+                                'json' // I expect a JSON response
+                            );
+                        });
+                    </script>
+
+
 
                 </div>
 
@@ -67,11 +121,8 @@
 
 
 		<script>
-
+            // draw map
 		    // from https://developers.google.com/maps/documentation/javascript/examples/polyline-simple
-		    // This example creates a 2-pixel-wide red polyline showing the path of
-		    // the first trans-Pacific flight between Oakland, CA, and Brisbane,
-		    // Australia which was made by Charles Kingsford Smith.
 
             function initMap() {
                 // convert from python to javascript array
