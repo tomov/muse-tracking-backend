@@ -9,7 +9,16 @@
 }
 #chart {
   display: table-cell;
-  background-color: red;
+  /*background-color: red; */
+}
+#chart_settings {
+    height: 95%;
+    width: 10%;
+    float: left;
+}
+#chart_container {
+    height: 90%;
+    width: 90%;
 }
 #row2 {
   display: table-row;

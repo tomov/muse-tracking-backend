@@ -259,10 +259,11 @@ def extract_for_comparison(s1, t1, w1, lag, s2, t2, w2, s3, t3, w3):
 
 # correlate neural and behavioral signals as specified by user
 #
-@application.route('/correlate', methods=['POST'])
-def correlate():
+@application.route('/correlate/<subject_id>', methods=['POST'])
+def correlate(subject_id):
 
     # TODO sanitize!!!!
+    subject_id = int(subject_id)
     sig_neural = request.form['sig_neural']
     tab_neural = request.form['tab_neural']
     win_neural = int(request.form['win_neural'])
@@ -274,7 +275,7 @@ def correlate():
     tab_quality = request.form['tab_quality']
     win_quality = int(request.form['win_quality'])
 
-    q1 = '''SELECT %s, utimestamp / 1000 FROM %s ORDER BY utimestamp LIMIT 1000''' % (sig_neural, tab_neural)
+    q1 = '''SELECT %s, utimestamp / 1000 FROM %s ORDER BY utimestamp WHERE subject_id = %d LIMIT 1000''' % (sig_neural, tab_neural, subject_id)
     rv = select(q1)
     s1 = []
     t1 = []
@@ -283,7 +284,7 @@ def correlate():
         t1.append(row[1])
     w1 = win_neural
 
-    q2 = '''SELECT %s, utimestamp / 1000  FROM %s ORDER BY utimestamp LIMIT 1000''' % (sig_behavioral, tab_behavioral)
+    q2 = '''SELECT %s, utimestamp / 1000  FROM %s ORDER BY utimestamp WHERE subject_id = %d LIMIT 1000''' % (sig_behavioral, tab_behavioral, subject_id)
     rv = select(q2)
     s2 = []
     t2 = []
@@ -292,7 +293,7 @@ def correlate():
         t2.append(row[1])
     w2 = win_behavioral 
 
-    q3 = '''SELECT %s, utimestamp / 1000 FROM %s ORDER BY utimestamp LIMIT 1000''' % (sig_quality, tab_quality)
+    q3 = '''SELECT %s, utimestamp / 1000 FROM %s ORDER BY utimestamp WHERE subject_id = %d LIMIT 1000''' % (sig_quality, tab_quality, subject_id)
     rv = select(q3)
     s3 = []
     t3 = []
@@ -308,6 +309,46 @@ def correlate():
     print r, ' ', p
 
     ret = {'r': r, 'p': p, 'q1': q1, 'q2': q2, 'q3': q3, 'ret1': ret1, 'ret2': ret2}
+    return jsonify(ret)
+
+
+
+# get (live) EEG data
+#
+@application.route('/get_eeg/<subject_id>', methods=['POST'])
+def get_eeg(subject_id):
+
+    # TODO sanitize!!!!
+    subject_id = int(subject_id)
+    tab_chart = request.form['tab_chart']
+    last_id = int(request.args.get('last_id'))
+
+    q1 = '''SELECT eeg1, eeg2, eeg3, eeg4, aux1, aux2, utimestamp / 1000, timestamp, id FROM %s WHERE subject_id = %d AND id > %d ORDER BY utimestamp DESC LIMIT 50''' % (tab_chart, subject_id, last_id)
+    print q1
+    rv = select(q1)
+
+    ret = {
+            'eeg1': [],
+            'eeg2': [],
+            'eeg3': [],
+            'eeg4': [],
+            'aux1': [],
+            'aux2': [],
+            'mt': [],
+            't': [],
+            'id': []
+            }
+    for row in rv:
+        ret['eeg1'].append(row[0])
+        ret['eeg2'].append(row[1])
+        ret['eeg3'].append(row[2])
+        ret['eeg4'].append(row[3])
+        ret['aux1'].append(row[4])
+        ret['aux2'].append(row[5])
+        ret['mt'].append(int(row[6]))
+        ret['t'].append(row[7])
+        ret['id'].append(row[8])
+
     return jsonify(ret)
 
 

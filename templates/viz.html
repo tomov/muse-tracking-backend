@@ -15,7 +15,19 @@
                 <div id="muse">
                 </div>
                 <div id="chart">
-                    <div id="chartContainer" style="height: 90%; width:90%;"></div>
+                    <div id="chart_settings">
+                        <form id="chart_form">
+                            <select id="tab_chart" name="tab_chart">
+                                <option value="alpha">alpha</option>
+                                <option value="beta">beta</option>
+                                <option value="delta">delta</option>
+                                <option value="theta" selected="selected">theta</option>
+                                <option value="gamma">gamma</option>
+                            </select>
+                        </form>
+                    </div>
+
+                    <div id="chart_container"></div>
                 </div>
             </div>
             <div id="row2">
@@ -99,57 +111,65 @@
                     <script>  
                         // TODO move to separate file
 
+						// plot EEG data
+                        // from https://canvasjs.com/html5-javascript-dynamic-chart/
+                        //
 						window.onload = function () {
 
 						    var dps = []; // dataPoints
-						    var chart = new CanvasJS.Chart("chartContainer", {
+						    var chart = new CanvasJS.Chart("chart_container", {
 						    	title :{
 						    		text: "Dynamic Data"
 						    	},
 						    	axisY: {
 						    		includeZero: false
 						    	},      
+                                axisX: {
+                                    valueFormatString: "MM/DD/YY hh:mm:ss"
+                                },
 						    	data: [{
 						    		type: "line",
 						    		dataPoints: dps
 						    	}]
 						    });
 
-						    var xVal = 0;
-						    var yVal = 100; 
-						    var updateInterval = 1000;
-						    var dataLength = 20; // number of dataPoints visible at any point
+						    var updateInterval = 10000;
+                            var last_id = -1;
 
-						    var updateChart = function (count) {
+                            var getEEG = function () {
 
-						    	count = count || 1;
+                                $.post("{{ url_for('get_eeg', subject_id=subject_id) }}&last_id=" + last_id.toString(), $('form#chart_form').serialize(), function() {}, 'json')
+                                .done(function(data) {
+                                    console.log(data);
 
-						    	for (var j = 0; j < count; j++) {
-						    		yVal = yVal +  Math.round(5 + Math.random() *(-5-5));
-						    		dps.push({
-						    			x: xVal,
-						    			y: yVal
-						    		});
-						    		xVal++;
-						    	}
+                                    dps.length = 0; // important not to recreate array -> we need pointer to stay the same
+                                    // go in reverse order b/c ORDER BY DESC
+                                    //
+                                    for (var i = data['eeg1'].length - 1; i >= 0; i--) {
+                                        dps.push({
+                                            x: new Date(data['mt'][i]),
+                                            y: data['eeg1'][i]
+                                        });
+                                    //    last_id = Math.max(last_id, data['id'][i]);
+                                    }
 
-						    	if (dps.length > dataLength) {
-						    		dps.shift();
-						    	}
+                                    chart.render();
+                                })
+                                .fail(function(xhr, status, error) {
+                                    console.log('get_eeg error');
+                                });
+                            }
 
-						    	chart.render();
-						    };
-
-						    updateChart(dataLength);
-						    setInterval(function(){updateChart()}, updateInterval);
-
+                            getEEG();
+						    setInterval(function(){getEEG()}, updateInterval);
 						}
+
 
                         // handle submit for correlate form (Run button)
                         // from https://stackoverflow.com/questions/1200266/submit-a-form-using-jquery
                         //
                         $('input#submit_corr').click( function() {
-                            $.post("{{ url_for('correlate') }}", $('form#correlate').serialize(), function() {}, 'json')
+                            $.post("{{ url_for('correlate', subject_id=subject_id) }}", $('form#correlate').serialize(), function() {}, 'json')
                             .done(function(data) {
                                 console.log(data);
                                 var r = data['r'];
