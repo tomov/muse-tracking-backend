@@ -4,13 +4,21 @@
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/viz.css') }}">
         <script src="{{ url_for('static', filename='js/jquery-1.10.2.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/plotly-latest.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/canvasjs.min.js') }}"></script>
     </head>
 
     <body>
         <h2>Subject #{{ subject_id }} real-time and historical Muse EEG data</h2>
 
         <div id="wrapper">
-            <div id="row">
+            <div id="row1">
+                <div id="muse">
+                </div>
+                <div id="chart">
+                    <div id="chartContainer" style="height: 90%; width:90%;"></div>
+                </div>
+            </div>
+            <div id="row2">
                 <div id="query">
 
                     <form id="correlate">
@@ -88,7 +96,55 @@
                     </form>
 
 
-                    <script>
+                    <script>  
+                        // TODO move to separate file
+
+						window.onload = function () {
+
+						    var dps = []; // dataPoints
+						    var chart = new CanvasJS.Chart("chartContainer", {
+						    	title :{
+						    		text: "Dynamic Data"
+						    	},
+						    	axisY: {
+						    		includeZero: false
+						    	},      
+						    	data: [{
+						    		type: "line",
+						    		dataPoints: dps
+						    	}]
+						    });
+
+						    var xVal = 0;
+						    var yVal = 100; 
+						    var updateInterval = 1000;
+						    var dataLength = 20; // number of dataPoints visible at any point
+
+						    var updateChart = function (count) {
+
+						    	count = count || 1;
+
+						    	for (var j = 0; j < count; j++) {
+						    		yVal = yVal +  Math.round(5 + Math.random() *(-5-5));
+						    		dps.push({
+						    			x: xVal,
+						    			y: yVal
+						    		});
+						    		xVal++;
+						    	}
+
+						    	if (dps.length > dataLength) {
+						    		dps.shift();
+						    	}
+
+						    	chart.render();
+						    };
+
+						    updateChart(dataLength);
+						    setInterval(function(){updateChart()}, updateInterval);
+
+						}
+
                         // handle submit for correlate form (Run button)
                         // from https://stackoverflow.com/questions/1200266/submit-a-form-using-jquery
                         //
