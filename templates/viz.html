@@ -115,98 +115,107 @@
 
 						// plot EEG data
                         // from https://canvasjs.com/html5-javascript-dynamic-chart/
+                        // also read up on http://developer.choosemuse.com/tools/available-data#DRLRefData
+                        //
+                        var dps = [[],[],[],[],[],[]]; // dataPoints
+                        var chart = new CanvasJS.Chart("chart_container", {
+                            title :{
+                                text: "Absolute " + $('#tab_chart').val() + " power"
+                            },
+                            axisY: {
+                                includeZero: false,
+                                title: "Bels"
+                            },      
+                            axisX: {
+                                valueFormatString: "MM/DD/YY hh:mm:ss"
+                            },
+                            data: [{
+                                name: "EEG1",
+                                type: "line",
+                                showInLegend: true,
+                                dataPoints: dps[0]
+                            }, {
+                                name: "EEG2",
+                                type: "line",
+                                showInLegend: true,
+                                dataPoints: dps[1]
+                            }, {
+                                name: "EEG3",
+                                type: "line",
+                                showInLegend: true,
+                                dataPoints: dps[2]
+                            }, {
+                                name: "EEG4",
+                                type: "line",
+                                showInLegend: true,
+                                dataPoints: dps[3]
+                            }, {
+                                name: "AUX1",
+                                type: "line",
+                                showInLegend: true,
+                                dataPoints: dps[4]
+                            }, {
+                                name: "AUX2",
+                                type: "line",
+                                showInLegend: true,
+                                dataPoints: dps[5]
+                            }]
+                        });
+                        var fields = ['eeg1', 'eeg2', 'eeg3', 'eeg4', 'aux1', 'aux2'];
+
+                        var updateInterval = 3000;
+                        var last_id = -1;
+                        var dataLength = 500;
+
+                        var getEEG = function () {
+
+                            $.post("{{ url_for('get_eeg', subject_id=subject_id) }}", $('form#chart_form').serialize(), function() {}, 'json')
+                            .done(function(data) {
+                                console.log(data);
+
+                                // go in reverse order b/c ORDER BY DESC
+                                //
+                                for (var j = 0; j < fields.length; j++) {
+                                    var key = fields[j];
+                                    for (var i = data[key].length - 1; i >= 0; i--) {
+                                        dps[j].push({
+                                            x: new Date(data['mt'][i]),
+                                            y: data[key][i]
+                                        });
+                                        last_id = Math.max(last_id, data['id'][i]);
+                                    }
+                                }
+                                // trim arrays
+                                for (var j = 0; j < dps.length; j++) {
+                                    while (dps[j].length > dataLength) {
+                                        dps[j].shift();
+                                    }
+                                }
+                                $('#last_id_hack').val(last_id);
+
+                                chart.render();
+                            })
+                            .fail(function(xhr, status, error) {
+                                console.log('get_eeg error');
+                            });
+                        }
+
+                        // setup chart on window load
                         //
 						window.onload = function () {
-
-                            // read up on http://developer.choosemuse.com/tools/available-data#DRLRefData
-                            //
-						    var dps = [[],[],[],[],[],[]]; // dataPoints
-						    var chart = new CanvasJS.Chart("chart_container", {
-						    	title :{
-						    		text: "Absolute Band Power"
-						    	},
-						    	axisY: {
-						    		includeZero: false,
-                                    title: "Bels"
-						    	},      
-                                axisX: {
-                                    valueFormatString: "MM/DD/YY hh:mm:ss"
-                                },
-						    	data: [{
-                                    name: "EEG1",
-						    		type: "line",
-                                    showInLegend: true,
-						    		dataPoints: dps[0]
-						    	}, {
-                                    name: "EEG2",
-						    		type: "line",
-                                    showInLegend: true,
-						    		dataPoints: dps[1]
-						    	}, {
-                                    name: "EEG3",
-						    		type: "line",
-                                    showInLegend: true,
-						    		dataPoints: dps[2]
-						    	}, {
-                                    name: "EEG4",
-						    		type: "line",
-                                    showInLegend: true,
-						    		dataPoints: dps[3]
-						    	}, {
-                                    name: "AUX1",
-						    		type: "line",
-                                    showInLegend: true,
-						    		dataPoints: dps[4]
-						    	}, {
-                                    name: "AUX2",
-						    		type: "line",
-                                    showInLegend: true,
-						    		dataPoints: dps[5]
-						    	}]
-						    });
-                            fields = ['eeg1', 'eeg2', 'eeg3', 'eeg4', 'aux1', 'aux2'];
-
-						    var updateInterval = 3000;
-                            var last_id = -1;
-                            var dataLength = 500;
-
-                            var getEEG = function () {
-
-                                $.post("{{ url_for('get_eeg', subject_id=subject_id) }}", $('form#chart_form').serialize(), function() {}, 'json')
-                                .done(function(data) {
-                                    console.log(data);
-
-                                    // go in reverse order b/c ORDER BY DESC
-                                    //
-                                    for (var j = 0; j < fields.length; j++) {
-                                        var key = fields[j];
-                                        for (var i = data[key].length - 1; i >= 0; i--) {
-                                            dps[j].push({
-                                                x: new Date(data['mt'][i]),
-                                                y: data[key][i]
-                                            });
-                                            last_id = Math.max(last_id, data['id'][i]);
-                                        }
-                                    }
-                                    // trim arrays
-                                    for (var j = 0; j < dps.length; j++) {
-                                        while (dps[j].length > dataLength) {
-                                            dps[j].shift();
-                                        }
-                                    }
-                                    $('#last_id_hack').val(last_id);
-
-                                    chart.render();
-                                })
-                                .fail(function(xhr, status, error) {
-                                    console.log('get_eeg error');
-                                });
-                            }
-
                             getEEG();
 						    setInterval(function(){getEEG()}, updateInterval);
 						}
 
+                        // change chart frequency range 
+                        //
+                        $('select#tab_chart').change( function() {
+                            for (var j = 0; j < dps.length; j++) {
+                                dps[j].length = 0;  // important -- clear in place; address needs to stay the same
+                            }
+                            chart.options.title.text = "Absolute " + $('#tab_chart').val() + " power"
+                            last_id = -1;
+                        });
 
                         // handle submit for correlate form (Run button)
                         // from https://stackoverflow.com/questions/1200266/submit-a-form-using-jquery
