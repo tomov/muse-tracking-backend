@@ -320,10 +320,10 @@ def get_eeg(subject_id):
 
     # TODO sanitize!!!!
     subject_id = int(subject_id)
+    last_id = int(request.form['last_id_hack'])
     tab_chart = request.form['tab_chart']
-    last_id = int(request.args.get('last_id'))
 
-    q1 = '''SELECT eeg1, eeg2, eeg3, eeg4, aux1, aux2, utimestamp / 1000, timestamp, id FROM %s WHERE subject_id = %d AND id > %d ORDER BY utimestamp DESC LIMIT 50''' % (tab_chart, subject_id, last_id)
+    q1 = '''SELECT eeg1, eeg2, eeg3, eeg4, aux1, aux2, utimestamp / 1000, timestamp, id FROM %s WHERE subject_id = %d AND id > %d ORDER BY utimestamp DESC LIMIT 500''' % (tab_chart, subject_id, last_id)
     print q1
     rv = select(q1)
 
@@ -347,7 +347,7 @@ def get_eeg(subject_id):
         ret['aux2'].append(row[5])
         ret['mt'].append(int(row[6]))
         ret['t'].append(row[7])
-        ret['id'].append(row[8])
+        ret['id'].append(int(row[8]))
 
     return jsonify(ret)
 

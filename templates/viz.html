@@ -17,6 +17,7 @@
                 <div id="chart">
                     <div id="chart_settings">
                         <form id="chart_form">
+                            <br />Frequency band: <br />
                             <select id="tab_chart" name="tab_chart">
                                 <option value="alpha">alpha</option>
                                 <option value="beta">beta</option>
@@ -24,6 +25,7 @@
                                 <option value="theta" selected="selected">theta</option>
                                 <option value="gamma">gamma</option>
                             </select>
+                            <input type="text" name="last_id_hack" id="last_id_hack" value="-1" hidden></input> <!-- hack to pass last_id -->
                         </form>
                     </div>
 
@@ -116,42 +118,83 @@
                         //
 						window.onload = function () {
 
-						    var dps = []; // dataPoints
+                            // read up on http://developer.choosemuse.com/tools/available-data#DRLRefData
+                            //
+						    var dps = [[],[],[],[],[],[]]; // dataPoints
 						    var chart = new CanvasJS.Chart("chart_container", {
 						    	title :{
-						    		text: "Dynamic Data"
+						    		text: "Absolute Band Power"
 						    	},
 						    	axisY: {
-						    		includeZero: false
+						    		includeZero: false,
+                                    title: "Bels"
 						    	},      
                                 axisX: {
                                     valueFormatString: "MM/DD/YY hh:mm:ss"
                                 },
 						    	data: [{
+                                    name: "EEG1",
 						    		type: "line",
-						    		dataPoints: dps
+                                    showInLegend: true,
+						    		dataPoints: dps[0]
+						    	}, {
+                                    name: "EEG2",
+						    		type: "line",
+                                    showInLegend: true,
+						    		dataPoints: dps[1]
+						    	}, {
+                                    name: "EEG3",
+						    		type: "line",
+                                    showInLegend: true,
+						    		dataPoints: dps[2]
+						    	}, {
+                                    name: "EEG4",
+						    		type: "line",
+                                    showInLegend: true,
+						    		dataPoints: dps[3]
+						    	}, {
+                                    name: "AUX1",
+						    		type: "line",
+                                    showInLegend: true,
+						    		dataPoints: dps[4]
+						    	}, {
+                                    name: "AUX2",
+						    		type: "line",
+                                    showInLegend: true,
+						    		dataPoints: dps[5]
 						    	}]
 						    });
+                            fields = ['eeg1', 'eeg2', 'eeg3', 'eeg4', 'aux1', 'aux2'];
 
-						    var updateInterval = 10000;
+						    var updateInterval = 3000;
                             var last_id = -1;
+                            var dataLength = 500;
 
                             var getEEG = function () {
 
-                                $.post("{{ url_for('get_eeg', subject_id=subject_id) }}&last_id=" + last_id.toString(), $('form#chart_form').serialize(), function() {}, 'json')
+                                $.post("{{ url_for('get_eeg', subject_id=subject_id) }}", $('form#chart_form').serialize(), function() {}, 'json')
                                 .done(function(data) {
                                     console.log(data);
 
-                                    dps.length = 0; // important not to recreate array -> we need pointer to stay the same
                                     // go in reverse order b/c ORDER BY DESC
                                     //
-                                    for (var i = data['eeg1'].length - 1; i >= 0; i--) {
-                                        dps.push({
-                                            x: new Date(data['mt'][i]),
-                                            y: data['eeg1'][i]
-                                        });
-                                    //    last_id = Math.max(last_id, data['id'][i]);
+                                    for (var j = 0; j < fields.length; j++) {
+                                        var key = fields[j];
+                                        for (var i = data[key].length - 1; i >= 0; i--) {
+                                            dps[j].push({
+                                                x: new Date(data['mt'][i]),
+                                                y: data[key][i]
+                                            });
+                                            last_id = Math.max(last_id, data['id'][i]);
+                                        }
                                     }
+                                    // trim arrays
+                                    for (var j = 0; j < dps.length; j++) {
+                                        while (dps[j].length > dataLength) {
+                                            dps[j].shift();
+                                        }
+                                    }
+                                    $('#last_id_hack').val(last_id);
 
                                     chart.render();
                                 })
