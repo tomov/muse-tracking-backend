@@ -276,7 +276,7 @@ def correlate(subject_id):
     tab_quality = request.form['tab_quality']
     win_quality = int(request.form['win_quality'])
 
-    q1 = '''SELECT %s, utimestamp / 1000 FROM %s WHERE subject_id = %d ORDER BY utimestamp LIMIT 1000''' % (sig_neural, tab_neural, subject_id)
+    q1 = '''SELECT %s, utimestamp / 1000 FROM %s WHERE subject_id = %d ORDER BY utimestamp''' % (sig_neural, tab_neural, subject_id)
     rv = select(q1)
     s1 = []
     t1 = []
@@ -285,7 +285,7 @@ def correlate(subject_id):
         t1.append(row[1])
     w1 = win_neural
 
-    q2 = '''SELECT %s, utimestamp / 1000  FROM %s WHERE subject_id = %d ORDER BY utimestamp LIMIT 1000''' % (sig_behavioral, tab_behavioral, subject_id)
+    q2 = '''SELECT %s, utimestamp / 1000  FROM %s WHERE subject_id = %d ORDER BY utimestamp''' % (sig_behavioral, tab_behavioral, subject_id)
     rv = select(q2)
     s2 = []
     t2 = []
@@ -294,7 +294,7 @@ def correlate(subject_id):
         t2.append(row[1])
     w2 = win_behavioral 
 
-    q3 = '''SELECT %s, utimestamp / 1000 FROM %s WHERE subject_id = %d ORDER BY utimestamp LIMIT 1000''' % (sig_quality, tab_quality, subject_id)
+    q3 = '''SELECT %s, utimestamp / 1000 FROM %s WHERE subject_id = %d ORDER BY utimestamp''' % (sig_quality, tab_quality, subject_id)
     rv = select(q3)
     s3 = []
     t3 = []

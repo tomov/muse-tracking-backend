@@ -105,7 +105,9 @@
 
                         <br /><br />
                         <input type="button" name="submit_corr" id="submit_corr" value="Run"></input>
+                        <img id="submit_corr_spinner" src="{{ url_for('static', filename='gif/spinner.gif') }}" style="height: 20px; width: 20px;" hidden></img>
                         <input type="button" name="submit_loc" id="submit_loc" value="Locate"></input>
+                        <img id="submit_loc_spinner" src="{{ url_for('static', filename='gif/spinner.gif') }}" style="height: 20px; width: 20px;" hidden></img>
 
                         <br /><br /><strong>Result:</strong><br />
                         <span id="corr_result"></span> <!-- TODO remove out of form... maybe split into two forms? but then can't save query ... -->

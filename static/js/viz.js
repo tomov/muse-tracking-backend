@@ -319,6 +319,9 @@ $('select#tab_behavioral_chart').change( function() {
 // from https://stackoverflow.com/questions/1200266/submit-a-form-using-jquery
 //
 $('input#submit_corr').click( function() {
+
+    $('#submit_corr_spinner').show();
+    $('#submit_corr').hide();
     $.post(correlate_url, $('form#correlate').serialize(), function() {}, 'json')
     .done(function(data) {
         console.log(data);
@@ -335,12 +338,17 @@ $('input#submit_corr').click( function() {
     })
     .always(function() {
         $('#save_result').html("");
+        $('#submit_corr_spinner').hide();
+        $('#submit_corr').show();
     });
 });
 
 // handle submit for location plotting (Locate button)
 //
 $('input#submit_loc').click( function() {
+
+    $('#submit_loc_spinner').show();
+    $('#submit_loc').hide();
     $.post(locate_url, $('form#correlate').serialize(), function() {}, 'json')
     .done(function(data) {
         console.log(data);
@@ -354,7 +362,8 @@ $('input#submit_loc').click( function() {
         console.log(error);
     })
     .always(function() {
-        //$('#save_result').html("");
+        $('#submit_loc_spinner').hide();
+        $('#submit_loc').show();
     });
 });
 
