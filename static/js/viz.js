@@ -151,7 +151,7 @@ var behavioral_fields = ['x', 'y', 'z'];
 
 
 
-var updateInterval = 300000;
+var eegUpdateInterval = 5000;
 var last_id = -1;
 var dataLength = 500;
 var refreshed = false;
@@ -160,6 +160,9 @@ var refreshed = false;
 //
 var getEEG = function () {
 
+    // TODO breaks if post request is sent before previous one is received
+    // NOT thread-safe
+    //
     $.post(get_eeg_url, $('form#chart_form').serialize(), function() {}, 'json')
     .done(function(data) {
         console.log(data);
@@ -235,12 +238,6 @@ var getEEG = function () {
     });
 }
 
-// setup neural_chart on window load
-//
-window.onload = function () {
-    getEEG();
-    setInterval(function(){getEEG()}, updateInterval);
-}
 
 function refreshCharts() { 
     for (var j = 0; j < neural_dps.length; j++) {
@@ -327,3 +324,114 @@ $('select#queries').change( function() {
         $('form#correlate').trigger('reset');
     }
 });
+
+
+
+
+hsi = [0, 0, 0, 0];
+hsiUpdateInterval = 3000;
+hsiLastMt = -1;
+
+function setupHSICanvas() {
+    var img = document.getElementById("electrodes");
+
+    var canvas = document.getElementById('electrodes_canvas');
+    canvas.style.position = "absolute";
+    canvas.style.left = img.offsetLeft + "px";
+    canvas.style.top = img.offsetTop + "px";
+    canvas.style.width = img.width + "px";
+    canvas.style.height = img.height + "px";
+}
+
+function DrawHSI(){
+    var canvas = document.getElementById('electrodes_canvas');
+
+    var centers = [{
+        x: canvas.width * 0.1,
+        y: canvas.height * 0.65
+    }, {
+        x: canvas.width * 0.35,
+        y: canvas.height * 0.25
+    }, {
+        x: canvas.width * 0.65,
+        y: canvas.height * 0.25
+    }, {
+        x: canvas.width * 0.9,
+        y: canvas.height * 0.65
+    }];
+
+    fillStyle = ["grey", "green", "yellow", "red", "red"];
+    strokeStyle = ["#222222", "#003300", "333300", "330000", "330000"];
+
+    var context = canvas.getContext('2d');
+    var radius = 8;
+
+    for (var i = 0; i < centers.length; i++) {
+        var centerX = centers[i].x; 
+        var centerY = centers[i].y;
+
+        context.beginPath();
+        context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+        context.fillStyle = fillStyle[hsi[i]];
+        context.fill();
+        context.lineWidth = 0;
+        context.strokeStyle = strokeStyle[hsi[i]];
+        context.stroke();    
+
+        context.fillStyle = 'black';
+        context.textAlign = 'center';
+        context.fillText((i+1).toString(), centerX, centerY + 3);
+    }
+}
+
+
+function formatDate(date) {
+    var day = date.getDate();
+    var monthIndex = date.getMonth();
+    var year = date.getFullYear();
+    var hour = date.getHours();
+    var mins = date.getMinutes();
+    var secs = date.getSeconds();
+    
+
+   // return day + ' ' + monthNames[monthIndex] + ' ' + year;
+    return (monthIndex + 1) + '/' + day + '/' + year + ' ' + hour + ':' + mins + ':' + secs;
+}
+
+
+var getHSI = function () {
+
+    $.post(get_hsi_url, {}, function() {}, 'json')
+    .done(function(data) {
+        console.log(data);
+
+        hsi = data[0];
+        hsiLastMt = data[0][4]; 
+
+        var hsiLast = new Date(hsiLastMt);
+        var diff = Date.now() - hsiLast.getTime(); // in milliseconds
+        if (diff > 10000) {
+            $('#status').text('Offline since ' + formatDate(hsiLast));
+            $('#status').css('color', 'red');
+        } else {
+            $('#status').text('Online');
+            $('#status').css('color', 'green');
+        }
+
+        DrawHSI();
+    })
+    .fail(function(xhr, status, error) {
+        console.log('get_hsi error');
+    });
+}
+
+
+// setup charts and stuff on window load
+//
+window.onload = function () {
+    getEEG();
+    setInterval(function(){getEEG()}, eegUpdateInterval);
+
+    setupHSICanvas();
+    setInterval(function(){getHSI()}, hsiUpdateInterval);
+}

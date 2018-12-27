@@ -312,6 +312,22 @@ def correlate(subject_id):
     return jsonify(ret)
 
 
+# get (live) hsi i.e. signal quality data
+#
+@application.route('/get_hsi/<subject_id>', methods=['POST'])
+def get_hsi(subject_id):
+
+    subject_id = int(subject_id)
+    q1 = '''SELECT eeg1, eeg2, eeg3, eeg4, utimestamp / 1000 FROM hsi WHERE subject_id = %d ORDER BY utimestamp DESC LIMIT 1''' % (subject_id)
+    print q1
+    rv = select(q1)
+
+    ret = [];
+    for row in rv:
+        ret.append([row[0], row[1], row[2], row[3], int(row[4])]);
+
+    return jsonify(ret)
+
 
 # get (live) EEG data
 #

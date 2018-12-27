@@ -7,6 +7,9 @@
   display: table-row;
   height: 100%;
 }
+#muse {
+  display: table-cell;
+}
 #chart {
   display: table-cell;
   /*background-color: red; */
