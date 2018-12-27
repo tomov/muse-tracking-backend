@@ -199,7 +199,7 @@ def extract_for_comparison(s1, t1, w1, lag, s2, t2, w2, s3, t3, w3):
     ret2 = []
     ret3 = []
 
-    while True:
+    while l1 < len(s1):
 
         # expand rolling window of signal 1 until we span an interval w1 (but not larger)
         #
