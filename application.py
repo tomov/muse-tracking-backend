@@ -421,8 +421,8 @@ def viz(subject_id):
     queries = select('''SELECT id, title FROM queries''')
     print queries
 
-    #loc = select('''SELECT latitude, longitude FROM location LIMIT 1000''')
-    loc = [[0, 0]]
+    loc = select('''SELECT latitude, longitude FROM location''')
+    #loc = [[0, 0]]
     return render_template('viz.html', title='Visualize', maps_api_key=MAPS_API_KEY, loc=loc, subject_id=subject_id, queries=queries)
 
 

@@ -151,7 +151,7 @@ var behavioral_fields = ['x', 'y', 'z'];
 
 
 
-var eegUpdateInterval = 5000;
+var eegUpdateInterval = 1000;
 var last_id = -1;
 var dataLength = 500;
 var refreshed = false;
@@ -235,6 +235,11 @@ var getEEG = function () {
     })
     .fail(function(xhr, status, error) {
         console.log('get_eeg error');
+    })
+    .always(function() {
+        if ($('#live_chart').prop('checked')) {
+            setTimeout(getEEG, eegUpdateInterval); // do it this way rather than setInterval to avoid getting overlapping requests
+        }
     });
 }
 
@@ -329,7 +334,7 @@ $('select#queries').change( function() {
 
 
 hsi = [0, 0, 0, 0];
-hsiUpdateInterval = 3000;
+hsiUpdateInterval = 1000;
 hsiLastMt = -1;
 
 function setupHSICanvas() {
@@ -422,6 +427,11 @@ var getHSI = function () {
     })
     .fail(function(xhr, status, error) {
         console.log('get_hsi error');
+    })
+    .always(function() {
+        if ($('#live_chart').prop('checked')) {
+            setTimeout(getHSI, hsiUpdateInterval); // do it this way rather than setInterval to avoid getting overlapping requests
+        }
     });
 }
 
@@ -430,8 +440,15 @@ var getHSI = function () {
 //
 window.onload = function () {
     getEEG();
-    setInterval(function(){getEEG()}, eegUpdateInterval);
 
     setupHSICanvas();
-    setInterval(function(){getHSI()}, hsiUpdateInterval);
+    getHSI();
 }
+
+
+$('#live_chart').change(function() {
+    if ($('#live_chart').prop('checked')) {
+        getEEG();
+        getHSI();
+    }
+});
