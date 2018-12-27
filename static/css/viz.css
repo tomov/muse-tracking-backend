@@ -1,7 +1,7 @@
 #wrapper {
   display: table;
   width: 100%;
-  height: 95%;
+  height: 110%;
 }
 #row1 {
   display: table-row;
@@ -16,8 +16,12 @@
     width: 10%;
     float: left;
 }
-#chart_container {
-    height: 90%;
+#neural_chart_container {
+    height: 45%;
+    width: 90%;
+}
+#behavioral_chart_container {
+    height: 45%;
     width: 90%;
 }
 #row2 {

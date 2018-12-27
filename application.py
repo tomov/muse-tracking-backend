@@ -321,9 +321,10 @@ def get_eeg(subject_id):
     # TODO sanitize!!!!
     subject_id = int(subject_id)
     last_id = int(request.form['last_id_hack'])
-    tab_chart = request.form['tab_chart']
+    tab_neural_chart = request.form['tab_neural_chart']
+    tab_behavioral_chart = request.form['tab_behavioral_chart']
 
-    q1 = '''SELECT eeg1, eeg2, eeg3, eeg4, aux1, aux2, utimestamp / 1000, timestamp, id FROM %s WHERE subject_id = %d AND id > %d ORDER BY utimestamp DESC LIMIT 500''' % (tab_chart, subject_id, last_id)
+    q1 = '''SELECT eeg1, eeg2, eeg3, eeg4, aux1, aux2, utimestamp / 1000, timestamp, id FROM %s WHERE subject_id = %d AND id > %d ORDER BY utimestamp DESC LIMIT 500''' % (tab_neural_chart, subject_id, last_id)
     print q1
     rv = select(q1)
 
@@ -334,10 +335,16 @@ def get_eeg(subject_id):
             'eeg4': [],
             'aux1': [],
             'aux2': [],
-            'mt': [],
-            't': [],
-            'id': []
+            'neural_mt': [],
+            'neural_t': [],
+            'neural_id': [],
+            'x': [],
+            'y': [],
+            'z': [],
+            'behavioral_mt': [],
             }
+    oldest_mt = float('inf')
+    latest_mt = float('-inf')
     for row in rv:
         ret['eeg1'].append(row[0])
         ret['eeg2'].append(row[1])
@@ -345,9 +352,25 @@ def get_eeg(subject_id):
         ret['eeg4'].append(row[3])
         ret['aux1'].append(row[4])
         ret['aux2'].append(row[5])
-        ret['mt'].append(int(row[6]))
-        ret['t'].append(row[7])
-        ret['id'].append(int(row[8]))
+        ret['neural_mt'].append(int(row[6]))
+        ret['neural_t'].append(row[7])
+        ret['neural_id'].append(int(row[8]))
+
+        if row[6] < oldest_mt:
+            oldest_mt = row[6]
+        if row[6] > latest_mt:
+            latest_mt = row[6]
+
+
+    if len(rv) > 0:
+        q2 = '''SELECT x, y, z, utimestamp / 1000 FROM %s WHERE subject_id = %d AND utimestamp >= %f AND utimestamp <= %f ORDER BY utimestamp DESC''' % (tab_behavioral_chart, subject_id, oldest_mt * 1000, latest_mt * 1000)
+        print q2
+        rv = select(q2)
+        for row in rv:
+            ret['x'].append(row[0])
+            ret['y'].append(row[1])
+            ret['z'].append(row[2])
+            ret['behavioral_mt'].append(int(row[3]))
 
     return jsonify(ret)
 
