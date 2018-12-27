@@ -40,13 +40,14 @@ function initMap() {
     // convert from python to javascript array
     //
     var coords = [];
-    bounds  = new google.maps.LatLngBounds(); // to auto zoom / pan map
+    var bounds  = new google.maps.LatLngBounds(); // to auto zoom / pan map
     for (var i = 0; i < loc.length; i++) {
         coords.push({lat: loc[i][0], lng: loc[i][1]})
         bounds.extend(new google.maps.LatLng(loc[i][0], loc[i][1]));
     }
 
-    var map = new google.maps.Map(document.getElementById('map'), {
+    // global map
+    map = new google.maps.Map(document.getElementById('map'), {
       zoom: 3,
       center: {lat: 0, lng: -180},
       mapTypeId: 'terrain'
@@ -69,6 +70,45 @@ function initMap() {
       strokeOpacity: 1.0,
       strokeWeight: 2
     });
+    
+    path.setMap(map);
+}
+
+
+function plotPath(loc, signal) {
+    var coords = [];
+    var bounds = new google.maps.LatLngBounds(); // to auto zoom / pan map
+    var min = 1000000;
+    var max = -1000000;
+    var nan = -1000000;
+    for (var i = 0; i < loc.length; i++) {
+        coords.push({lat: loc[i][0], lng: loc[i][1]})
+        bounds.extend(new google.maps.LatLng(loc[i][0], loc[i][1]));
+
+        if (i < signal.length) {
+            if (signal[i] != nan) { // TODO hack b/c NaN cannot be jsonified
+                min = Math.min(min, signal[i]);
+                max = Math.max(max, signal[i]);
+            }
+        }
+    }
+    map.fitBounds(bounds);
+    map.panToBounds(bounds);
+
+    for (var i = 0; i + 1 < loc.length; i++) {
+        if (signal[i] == nan) {
+            continue;
+        }
+        var color = 'rgb(' + (Math.floor(256 * (signal[i] - min) / (max - min))).toString() + ',0,0)';
+        var path = new google.maps.Polyline({
+            path: [coords[i], coords[i+1]],
+            geodesic: true,
+            strokeColor: color,
+            strokeOpacity: 1.0,
+            strokeWeight: 4,
+            map: map
+        });
+    }
     
     path.setMap(map);
 }
@@ -152,6 +192,7 @@ var behavioral_fields = ['x', 'y', 'z'];
 
 
 var eegUpdateInterval = 1000;
+eegUpdateInterval *= 1000;
 var last_id = -1;
 var dataLength = 500;
 var refreshed = false;
@@ -235,6 +276,7 @@ var getEEG = function () {
     })
     .fail(function(xhr, status, error) {
         console.log('get_eeg error');
+        console.log(error);
     })
     .always(function() {
         if ($('#live_chart').prop('checked')) {
@@ -289,9 +331,30 @@ $('input#submit_corr').click( function() {
     })
     .fail(function(xhr, status, error) {
         $('#corr_result').html("ERROR");
+        console.log(error);
     })
     .always(function() {
         $('#save_result').html("");
+    });
+});
+
+// handle submit for location plotting (Locate button)
+//
+$('input#submit_loc').click( function() {
+    $.post(locate_url, $('form#correlate').serialize(), function() {}, 'json')
+    .done(function(data) {
+        console.log(data);
+
+        var loc = data['loc']
+        var signal = data['signal']
+        plotPath(loc, signal);
+    })
+    .fail(function(xhr, status, error) {
+        //$('#corr_result').html("ERROR");
+        console.log(error);
+    })
+    .always(function() {
+        //$('#save_result').html("");
     });
 });
 
@@ -306,6 +369,7 @@ $('input#save_query').click( function() {
     })
     .fail(function(xhr, status, error) {
         $('#save_result').html("ERROR!");
+        console.log(error);
     })
 });
 
@@ -335,6 +399,7 @@ $('select#queries').change( function() {
 
 hsi = [0, 0, 0, 0];
 hsiUpdateInterval = 1000;
+hsiUpdateInterval *= 1000;
 hsiLastMt = -1;
 
 function setupHSICanvas() {
@@ -427,6 +492,7 @@ var getHSI = function () {
     })
     .fail(function(xhr, status, error) {
         console.log('get_hsi error');
+        console.log(error);
     })
     .always(function() {
         if ($('#live_chart').prop('checked')) {

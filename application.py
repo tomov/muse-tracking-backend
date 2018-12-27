@@ -169,8 +169,7 @@ def log():
     return 'OK'
 
 
-# extract rolling average from signal s1 with timestamps t1
-# using rolling window size w1
+# extract rolling average from signal s1 with timestamps t1 using rolling window size w1
 # and correspondingly for signal s2 but after a time lag of lag
 #
 # s3 is the hsi scores for s1, with timestamps t3, "flanking" window of s1 (w1) by w3 on each side
@@ -178,6 +177,8 @@ def log():
 # s = signal
 # t = timestamps
 # w = window size
+#
+# assumes all signals ordered in increasing timestamps
 #
 def extract_for_comparison(s1, t1, w1, lag, s2, t2, w2, s3, t3, w3):
     l1 = 0 # first index within current rolling window
@@ -312,6 +313,82 @@ def correlate(subject_id):
     return jsonify(ret)
 
 
+
+
+# get average of signal s1 (with timestamps t1) between timepoints in t2
+#
+# assumes all signals ordered in increasing timestamps
+#
+def get_intervals(s1, t1, t2):
+    l1 = 0 # first index within current rolling window
+    r1 = 1 # 1 + last index within current rolling window
+    s1_win = s1[0]
+
+    ret1 = []
+    nan = -1000000 # TODO hack
+    
+    for i in range(1,len(t2)):
+
+        # expand rolling window of signal 1 until it reaches next timepoint of signal 2
+        #
+        while r1 < len(s1) and t1[r1] < t2[i]:
+            s1_win += s1[r1]
+            r1 += 1
+
+        # shift rolling window of signal 1 until it passes the previous timepoint of signal 2
+        #
+        while l1 < r1 and t1[l1] < t2[i - 1]:
+            s1_win -= s1[l1]
+            l1 += 1
+
+        if l1 < r1:
+            s1_avg = s1_win / (r1 - l1)
+            ret1.append(s1_avg)
+        else:
+            ret1.append(nan) # TODO hack b/c NaN cannot get jsonified easily...
+    
+    return ret1
+
+
+# get locations with corresponding neural signal  
+#
+@application.route('/locate/<subject_id>', methods=['POST'])
+def locate(subject_id):
+
+    # TODO sanitize!!!!
+    subject_id = int(subject_id)
+    sig_neural = request.form['sig_neural']
+    tab_neural = request.form['tab_neural']
+    win_neural = int(request.form['win_neural'])
+
+    q1 = '''SELECT %s, utimestamp / 1000 FROM %s WHERE subject_id = %d ORDER BY utimestamp''' % (sig_neural, tab_neural, subject_id)
+    rv = select(q1)
+    s1 = []
+    t1 = []
+    for row in rv:
+        s1.append(row[0])
+        t1.append(row[1])
+
+    q2 = '''SELECT latitude, longitude, utimestamp / 1000 FROM location WHERE subject_id = %d ORDER BY utimestamp''' % (subject_id)
+    print q2
+    rv = select(q2)
+    loc = []
+    t2 = []
+    for row in rv:
+        loc.append([row[0], row[1]])
+        t2.append(row[2])
+
+    ret1 = get_intervals(s1, t1, t2)
+
+    ret = {
+        'loc': loc,
+        'signal': ret1
+    }
+    
+    return jsonify(ret)
+
+
+
 # get (live) hsi i.e. signal quality data
 #
 @application.route('/get_hsi/<subject_id>', methods=['POST'])
@@ -421,8 +498,8 @@ def viz(subject_id):
     queries = select('''SELECT id, title FROM queries''')
     print queries
 
-    loc = select('''SELECT latitude, longitude FROM location''')
-    #loc = [[0, 0]]
+    #loc = select('''SELECT latitude, longitude FROM location''')
+    loc = [[0, 0]]
     return render_template('viz.html', title='Visualize', maps_api_key=MAPS_API_KEY, loc=loc, subject_id=subject_id, queries=queries)
 
 

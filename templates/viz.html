@@ -13,9 +13,9 @@
         <div id="wrapper">
             <div id="row1">
                 <div id="muse">
-                    <h3 id="status" style="color: black">Status: </h3>
-                    <img id="electrodes" src="{{ url_for('static', filename='png/electrodes.png') }}" style="height: 200px; width: 200px;"></img>
-					<canvas id="electrodes_canvas" width="100" height="100"></canvas>
+                    <img id="electrodes" src="{{ url_for('static', filename='png/electrodes.png') }}" style="height: 200px; width: 200px; position: relative;"></img>
+                    <canvas id="electrodes_canvas" width="100" height="100"></canvas>
+                    <h3 id="status" style="color: black">Status</h3>
                 </div>
                 <div id="chart">
                     <div id="chart_settings">
@@ -105,6 +105,7 @@
 
                         <br /><br />
                         <input type="button" name="submit_corr" id="submit_corr" value="Run"></input>
+                        <input type="button" name="submit_loc" id="submit_loc" value="Locate"></input>
 
                         <br /><br /><strong>Result:</strong><br />
                         <span id="corr_result"></span> <!-- TODO remove out of form... maybe split into two forms? but then can't save query ... -->
@@ -140,6 +141,7 @@
             get_eeg_url = "{{ url_for('get_eeg', subject_id=subject_id) }}";
             get_hsi_url = "{{ url_for('get_hsi', subject_id=subject_id) }}";
             correlate_url = "{{ url_for('correlate', subject_id=subject_id) }}";
+            locate_url = "{{ url_for('locate', subject_id=subject_id) }}";
             save_query_url = "{{ url_for('save_query') }}";
             load_query_url = "{{ url_for('load_query') }}";
             loc = {{ loc|tojson }};
