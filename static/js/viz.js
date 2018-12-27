@@ -192,7 +192,7 @@ var behavioral_fields = ['x', 'y', 'z'];
 
 
 var eegUpdateInterval = 1000;
-eegUpdateInterval *= 1000;
+//eegUpdateInterval *= 1000;
 var last_id = -1;
 var dataLength = 500;
 var refreshed = false;
@@ -408,7 +408,7 @@ $('select#queries').change( function() {
 
 hsi = [0, 0, 0, 0];
 hsiUpdateInterval = 1000;
-hsiUpdateInterval *= 1000;
+//hsiUpdateInterval *= 1000;
 hsiLastMt = -1;
 
 function setupHSICanvas() {
