@@ -34,7 +34,7 @@ pyasn1==0.4.4
 python-dateutil==2.7.5
 PyYAML==3.13
 requests==2.18.4
-rsa==3.4.2
+rsa==4.7
 s3transfer==0.1.13
 scipy==1.2.0
 semantic-version==2.5.0
